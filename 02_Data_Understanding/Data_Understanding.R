@@ -2,15 +2,15 @@
 
 library(tidyverse)
 library(tidyr)
-library(data)
 library(DataExplorer)
 library(correlationfunnel)
 library(janitor)
 
-install.packages("correlationfunnel")
+
 
 #Import Data----
 employee_data_raw <- read_csv("00_Data/train_LZdllcl.csv")
+
 
 #Clean Name & Deal with NA----
 
@@ -18,7 +18,19 @@ employee_data <- employee_data_raw %>%
   clean_names() %>% 
   mutate(previous_year_rating=replace_na(previous_year_rating,999),
          education           =replace_na(education,"not_provided"))  
-  
+
+
+#create function specific to my data
+
+HR_Data_Missing_Value <- function(data) {
+  data %>%
+    mutate(previous_year_rating=replace_na(previous_year_rating,999),
+           education           =replace_na(education,"not_provided")) 
+}
+ 
+employee_data %>% 
+  HR_Data_Missing_Value() %>% 
+  is.na(.)
   
 employee_data %>% 
   glimpse()
@@ -44,5 +56,5 @@ Employee_correlation_funnel <- employee_binarize %>%
 #From the correlation funnel two elements indicate if a employee is likely to be promoted 
       #The fact that KPI were met
       #The fact that an employee won an award
-# Other element like the previous year rating and the average trinaing score have as well some predicting 
+# Other element like the previous year rating and the average training score have as well some predicting 
 # power but this is quite limited.
