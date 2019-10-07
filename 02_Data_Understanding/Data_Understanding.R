@@ -17,13 +17,15 @@ employee_data_raw <- read_csv("00_Data/train_LZdllcl.csv")
 employee_data <- employee_data_raw %>% 
   clean_names() %>% 
   mutate(previous_year_rating=replace_na(previous_year_rating,999),
-         education           =replace_na(education,"not_provided"))  
+         education           =replace_na(education,"not_provided"))
+  
 
 
 #create function specific to my data
 
 HR_Data_Missing_Value <- function(data) {
   data %>%
+    clean_names() %>% 
     mutate(previous_year_rating=replace_na(previous_year_rating,999),
            education           =replace_na(education,"not_provided")) 
 }

@@ -8,16 +8,25 @@ library(magrittr)
 
 source("00_Functions/Facet_Histogram_Data_Prep.R")
 
+source("00_Functions/HR_Missing_Data_Transformation.R")
+
+
+path_train <- "00_Data/train_LZdllcl.csv"
+path_test  <- "00_Data/test_2umaH9m.csv"
+
+
+train_raw <- read_csv(path_train) %>% HR_Data_Missing_Value()
+test_raw  <- read_csv(path_test)  %>% HR_Data_Missing_Value()
 
 #A.Visualize the distribution of my features----
 
-employee_data_raw %>% 
+train_raw %>% 
   select(is_promoted,everything()) %>% 
   plot_hist_facet()
 
 #Data Preprocessing with Recipes----
   
-  employee_data %>% 
+train_raw %>% 
     glimpse()
   
 #1.Impute
@@ -27,7 +36,7 @@ employee_data_raw %>%
 
 
           #Checking the features skewness
-          skewed_features_name <- employee_data %>% 
+          skewed_features_name <- train_raw %>% 
             select_if(is.numeric) %>% 
             map_df(skewness) %>%    #Mapdf aplly skewness function to all column keeping is as a data frame
             gather(factor_key = T) %>% 
@@ -38,7 +47,7 @@ employee_data_raw %>%
           
           #Check my features to define if any factors
           
-          employee_data %>% 
+          train_raw %>% 
             select(skewed_features_name) %>% 
             plot_hist_facet()
           
@@ -47,7 +56,7 @@ employee_data_raw %>%
           
           #Checking feature skewness excluding factors
           
-          skewed_features_name <- employee_data %>% 
+          skewed_features_name <- train_raw %>% 
             select_if(is.numeric) %>% 
             map_df(skewness) %>%    #Mapdf aplly skewness function to all column keeping is as a data frame
             gather(factor_key = T) %>% 
@@ -61,13 +70,13 @@ employee_data_raw %>%
           factor_names <- c("awards_won","previous_year_rating","is_promoted")  
 
   #Creation of the recipe object
-  recipe_obj <- recipe(is_promoted~.,data=employee_data) %>% 
+  recipe_obj <- recipe(is_promoted~.,data=train_raw) %>% 
     step_YeoJohnson(skewed_features_name) %>% 
     step_num2factor(factor_names)
 
           recipe_obj %>%   
             prep() %>% 
-            bake(employee_data) %>% 
+            bake(train_raw) %>% 
             select(skewed_features_name) %>% 
             plot_hist_facet()
 
@@ -80,7 +89,7 @@ employee_data_raw %>%
 
         recipe_obj %>%   
           prep() %>% 
-          bake(employee_data) %>% 
+          bake(train_raw) %>% 
           select(skewed_features_name) %>% 
           plot_hist_facet()
 
@@ -92,8 +101,8 @@ recipe_obj %<>%
 
         recipe_obj %>%   
           prep() %>% 
-          bake(employee_data) %>% 
-          select(factor_names) %>% 
+          bake(train_raw) %>% 
+          #select_if(is.factor) %>%   Need to fix here issue to only select the factors
           plot_hist_facet()
 
 #5.Create interactions /Engineered Features----
@@ -105,7 +114,9 @@ recipe_obj %<>%
 
 #Note here that we will deal with Class unbalance with my target
 
-rec_obj <- recipe(is_promoted~.,data = employee_data) %>% 
+rec_obj <- recipe(is_promoted~.,data = train_raw) %>% 
   step_dummy(all_predictors(), -all_numeric()) %>% 
   step_center(age,)  %>%
   step_scale(all_predictors()) 
+
+        
